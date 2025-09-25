@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Χρονομέτρηση Παικτών</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+margin: 20px;
+background-color: #f5f5f5;
+}
+.container {
+max-width: 800px;
+margin: 0 auto;
+background-color: white;
+padding: 20px;
+border-radius: 10px;
+box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 {
+text-align: center;
+color: #333;
+}
+.input-section {
+margin-bottom: 20px;
+text-align: center;
+}
+input {
+padding: 10px;
+margin: 5px;
+border: 1px solid #ddd;
+border-radius: 5px;
+}
+button {
+padding: 10px 15px;
+margin: 5px;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+font-weight: bold;
+}
+#addPlayerBtn {
+background-color: #4CAF50;
+color: white;
+}
+#addPlayerBtn:hover {
+background-color: #45a049;
+}
+.player-card {
+border: 1px solid #ddd;
+border-radius: 5px;
+padding: 15px;
+margin: 10px 0;
+background-color: #f9f9f9;
+}
+.player-name {
+font-size: 1.2em;
+font-weight: bold;
+margin-bottom: 10px;
+}
+.timer {
+font-size: 2em;
+font-family: 'Courier New', monospace;
+text-align: center;
+margin: 10px 0;
+color: #333;
+}
+.start-btn {
+background-color: #4CAF50;
+color: white;
+}
+.pause-btn {
+background-color: #ff9800;
+color: white;
+}
+.reset-btn {
+background-color: #f44336;
+color: white;
+}
+.remove-btn {
+background-color: #cccccc;
+color: black;
+}
+button:hover {
+opacity: 0.9;
+}
+button:disabled {
+background-color: #cccccc;
+cursor: not-allowed;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Χρονομέτρηση Παικτών ⚽</h1>
+<div class="input-section">
+<input type="text" id="playerNameInput" placeholder="Όνομα Παίκτη">
+<button id="addPlayerBtn">Προσθήκη Παίκτη</button>
+</div>
+
+<div id="playersContainer">
+<!-- Οι παίκτες θα προστεθούν εδώ δυναμικά -->
+</div>
+</div>
+
+<script>
+// Μετρητής για μοναδικά IDs
+let playerCounter = 0;
+
+// Λειτουργία προσθήκης νέου παίκτη
+document.getElementById('addPlayerBtn').addEventListener('click', function() {
+const playerName = document.getElementById('playerNameInput').value.trim();
+if (playerName === '') {
+alert('Παρακαλώ εισάγετε όνομα παίκτη!');
+return;
+}
+
+addPlayer(playerName);
+document.getElementById('playerNameInput').value = ''; // Καθαρισμός input
+});
+
+// Επιτρέπει την προσθήκη παίκτη με Enter
+document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+document.getElementById('addPlayerBtn').click();
+}
+});
+
+// Συνάρτηση δημιουργίας καρτέλας παίκτη
+function addPlayer(name) {
+playerCounter++;
+const playerId = `player-${playerCounter}`;
+const playerCard = document.createElement('div');
+playerCard.className = 'player-card';
+playerCard.id = playerId;
+
+playerCard.innerHTML = `
+<div class="player-name">${name}</div>
+<div class="timer" id="timer-${playerCounter}">00:00:00</div>
+<div style="text-align: center;">
+<button class="start-btn" onclick="startTimer('${playerId}')">Start</button>
+<button class="pause-btn" onclick="pauseTimer('${playerId}')" disabled>Pause</button>
+<button class="reset-btn" onclick="resetTimer('${playerId}')">Reset</button>
+<button class="remove-btn" onclick="removePlayer('${playerId}')">Remove</button>
+</div>
+`;
+
+document.getElementById('playersContainer').appendChild(playerCard);
+
+// Αρχικοποίηση αντικειμένου χρονομέτρου για τον παίκτη
+timers[playerId] = {
+seconds: 0,
+intervalId: null,
+isRunning: false
+};
+}
+
+// Αντικείμενο για την αποθήκευση όλων των χρονομέτρων
+const timers = {};
+
+// Έναρξη χρονομέτρου
+function startTimer(playerId) {
+const timer = timers[playerId];
+if (timer && !timer.isRunning) {
+timer.isRunning = true;
+// Ενεργοποίηση/απενεργοποίηση κουμπιών
+const card = document.getElementById(playerId);
+card.querySelector('.start-btn').disabled = true;
+card.querySelector('.pause-btn').disabled = false;
+
+timer.intervalId = setInterval(() => {
+timer.seconds++;
+updateDisplay(playerId);
+}, 1000);
+}
+}
+
+// Παύση χρονομέτρου
+function pauseTimer(playerId) {
+const timer = timers[playerId];
+if (timer && timer.isRunning) {
+timer.isRunning = false;
+clearInterval(timer.intervalId);
+// Ενεργοποίηση/απενεργοποίηση κουμπιών
+const card = document.getElementById(playerId);
+card.querySelector('.start-btn').disabled = false;
+card.querySelector('.pause-btn').disabled = true;
+}
+}
+
+// Επαναφορά χρονομέτρου
+function resetTimer(playerId) {
+const timer = timers[playerId];
+if (timer) {
+pauseTimer(playerId); // Σταματάμε το χρονόμετρο αν τρέχει
+timer.seconds = 0;
+updateDisplay(playerId);
+// Επαναφορά κουμπιών
+const card = document.getElementById(playerId);
+card.querySelector('.start-btn').disabled = false;
+card.querySelector('.pause-btn').disabled = true;
+}
+}
+
+// Αφαίρεση παίκτη
+function removePlayer(playerId) {
+if (confirm('Είστε σίγουρος ότι θέλετε να αφαιρέσετε αυτόν τον παίκτη;')) {
+pauseTimer(playerId); // Σταματάμε το χρονόμετρο
+delete timers[playerId]; // Διαγράφουμε το χρονόμετρο
+document.getElementById(playerId).remove(); // Αφαιρούμε την κάρτα
+}
+}
+
+// Ενημέρωση εμφάνισης χρόνου
+function updateDisplay(playerId) {
+const timer = timers[playerId];
+if (timer) {
+const hours = Math.floor(timer.seconds / 3600);
+const minutes = Math.floor((timer.seconds % 3600) / 60);
+const secs = timer.seconds % 60;
+const timeString =
+String(hours).padStart(2, '0') + ':' +
+String(minutes).padStart(2, '0') + ':' +
+String(secs).padStart(2, '0');
+const timerElement = document.querySelector(`#${playerId} .timer`);
+if (timerElement) {
+timerElement.textContent = timeString;
+}
+}
+}
+</script>
+</body>
+</html>
